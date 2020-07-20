@@ -1,22 +1,32 @@
 <template>
   <div class="viewCalendar" @click="clickHandler">
     <h1>pick the date</h1>
+    <div class="viewCalendarSwitchLang">
+      <label for="langRu">
+        Russian
+        <input type="radio" value="langRu" v-model="currentLang" id="langRu">
+      </label>
+      <label for="langEn">
+        English
+        <input type="radio" value="langEn" v-model="currentLang" id="langEn">
+      </label>
+    </div>
     <div class="viewCalendarTitle">
       {{ month }}
       <a data-change_month="-1" class="viewCalendarArrow viewCalendarArrow-prev"></a>
       <a data-change_month="1" class="viewCalendarArrow viewCalendarArrow-next"></a>
     </div>
     <section class="calendarBody">
-      <div v-for="day in langEn.weekDays"
+      <div v-for="day in week"
            class="calendarCell"
            :key='day'>
         {{ day }}
       </div>
-      <view-calendar-days v-for="num in lastDay"
+      <view-calendar-days v-for="(num, index) in monthDays"
                           class="calendarCell"
                           :number="num"
-                          :activeDay="activeDay"
-                          :key='num'/>
+                          :activeDay="activeDayNum"
+                          :key="index"/>
     </section>
   </div>
 </template>
@@ -36,7 +46,7 @@ export default {
     },
     lang: {
       type: String,
-      default: 'langEn'
+      default: 'langRu'
     }
   },
   data() {
@@ -49,38 +59,64 @@ export default {
         locale: 'en-Us',
         weekDays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
       },
-      lastDay: 0,
-      activeDay: 0,
-      newDate: this.date
+      currentLang: this.lang,
+      activeDay: this.date,
+      viewDate: {
+        firstDayDate: this.date,
+        lastDay: 0,
+        lastWeekDay: 0
+      }
     }
   },
   computed: {
     month() {
       const option = { month: 'long', year: 'numeric' }
-      return this.date.toLocaleString(this[this.lang].locale, option)
+      return this.viewDate.firstDayDate.toLocaleString(this[this.currentLang].locale, option)
+    },
+    monthDays() {
+      this.setLastDay()
+      const firstWeekDay = this.viewDate.firstDayDate.getDay()
+      const monthDays = []
+      const cicle = firstWeekDay + this.viewDate.lastDay + (6 - this.viewDate.lastWeekDay)
+      for (let i = 0; i < cicle; i++) {
+        let numDay
+        if (i < firstWeekDay) numDay = ''
+        else if (i > (this.viewDate.lastDay + firstWeekDay - 1)) numDay = ''
+        else numDay = i - firstWeekDay + 1
+        monthDays.push(numDay)
+      }
+      return monthDays
+    },
+    activeDayNum() {
+      if (this.activeDay.getFullYear() === this.viewDate.firstDayDate.getFullYear() && this.activeDay.getMonth() === this.viewDate.firstDayDate.getMonth()) return this.activeDay.getDate()
+      else return 0
+    },
+    week() {
+      return this[this.currentLang].weekDays
     }
   },
   created() {
-    // this.$store.dispatch('SET_CURRENT_DATE', this.date)
-    // this.date = this.$store.getters.GET_CURRENT_DATE
-    this.activeDay = this.date.getDate()
-    this.getLastDay()
+    this.viewDate.firstDayDate.setDate(1)
   },
   methods: {
-    getLastDay() {
-      const year = this.date.getFullYear()
-      const nextMonth = this.date.getMonth() + 1
-      this.lastDay = new Date(year, nextMonth, 0).getDate()
+    setLastDay() {
+      const year = this.viewDate.firstDayDate.getFullYear()
+      const nextMonth = this.viewDate.firstDayDate.getMonth() + 1
+      this.viewDate.lastDay = new Date(year, nextMonth, 0).getDate()
+      this.viewDate.lastWeekDay = new Date(year, nextMonth, 0).getDay()
     },
     clickHandler({ target }) {
       if (target.classList.contains('viewCalendarDays')) {
-        this.activeDay = parseInt(target.dataset.day, 10)
+        this.activeDay = new Date(this.viewDate.firstDayDate)
+        this.activeDay.setDate(parseInt(target.dataset.day, 10))
       } else if (target.classList.contains('viewCalendarArrow')) {
         this.changeMonth(parseInt(target.dataset.change_month, 10))
       }
     },
     changeMonth(shift) {
-      console.log('shift', shift)
+      const year = this.viewDate.firstDayDate.getFullYear()
+      const month = this.viewDate.firstDayDate.getMonth() + shift
+      this.viewDate.firstDayDate = new Date(year, month, 1)
     }
   }
 }
@@ -88,6 +124,7 @@ export default {
 
 <style lang="scss">
   .viewCalendar {
+    position: relative;
     width: 400px;
     margin: 0 auto;
     text-align: center;
@@ -96,6 +133,15 @@ export default {
   .viewCalendarTitle {
     position: relative;
     margin: 0 0 15px;
+  }
+
+  .viewCalendarSwitchLang {
+    position: absolute;
+    top:25%;
+    right: -150px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .viewCalendarArrow {
@@ -145,5 +191,3 @@ export default {
     margin: 0 -1px -1px 0;
   }
 </style>
-
-// нужно добавить для активного дня полное отслеживание даты

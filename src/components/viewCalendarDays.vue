@@ -10,10 +10,7 @@
 
 export default {
   name: 'viewCalendarDays',
-  props: {
-    number: Number,
-    activeDay: Number
-  },
+  props: ['number', 'activeDay'],
   computed: {
     active() {
       return this.number === this.activeDay
@@ -24,10 +21,10 @@ export default {
 
 <style lang="scss">
   .viewCalendarDays {
-    transition: background-color .3s;
     cursor: pointer;
 
      &:hover {
+       transition: background-color .3s;
        background-color: #ccc;
 
      }

@@ -1,6 +1,7 @@
 <template>
   <div id="app">
-    <view-calendar :date="date"/>
+    <view-calendar :date="date"
+                   lang="langRu"/>
   </div>
 </template>
 
@@ -14,7 +15,7 @@ export default {
   },
   data() {
     return {
-      date: new Date('2018-02-10')
+      date: new Date('2020-10-10')
     }
   }
 }
